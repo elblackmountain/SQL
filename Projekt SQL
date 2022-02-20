@@ -1,0 +1,228 @@
+-- Projekt SQL
+
+-- 1
+CREATE DATABASE sklep_odziezowy;
+USE sklep_odziezowy;
+
+-- 2
+CREATE TABLE Dostawcy(
+Id INTEGER PRIMARY KEY,
+Nazwa_producenta VARCHAR(30) ,
+Adres_producenta VARCHAR(255) DEFAULT NULL,
+Nip_producenta VARCHAR(10) DEFAULT NULL,
+Data_umowy DATE DEFAULT NULL,
+constraint CHECK (octet_length(Nip_producenta) = 10)
+);
+
+-- 3
+CREATE TABLE Produkty(
+Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+ID_producenta INTEGER,
+Nazwa_produktu VARCHAR(30) ,
+Opis_produktu VARCHAR(255) DEFAULT NULL,
+Cena_netto_zakupu DOUBLE DEFAULT NULL,
+Cena_brutto_zakupu DOUBLE AS (Cena_netto_zakupu + (Cena_netto_zakupu * Procent_VAT_Sprzedazy)/100),
+Cena_netto_sprzedazy DOUBLE DEFAULT NULL,
+Cena_brutto_sprzedazy DOUBLE AS (Cena_netto_sprzedazy + (Cena_netto_sprzedazy * Procent_VAT_Sprzedazy)/100),
+Procent_VAT_sprzedazy DOUBLE DEFAULT NULL
+);
+
+-- 4
+CREATE TABLE Zamowienia(
+Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+Id_klienta INTEGER DEFAULT NULL,
+Id_produktu INTEGER,
+Data_zamowienia DATE DEFAULT NULL
+);
+
+-- 5 
+CREATE TABLE Klienci(
+Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+Id_zamowienia INTEGER DEFAULT NULL,
+Imie VARCHAR(30) DEFAULT NULL,
+Nazwisko VARCHAR(30) DEFAULT NULL,
+Adres VARCHAR(255) DEFAULT NULL
+);
+
+-- 6 Dostawca (4poz)
+INSERT INTO Dostawcy (Id, Nazwa_producenta, Adres_producenta, Nip_producenta, Data_umowy) VALUES
+(1,'Zara', 'Indie', '8976537888', '2020-08-19'),
+(2,'Reserved', 'Indie', '2789537888', '2020-05-10'),
+(3,'Promod', 'Bangladesz', '9788273649', '2019-05-11'),
+(4, 'Kappahl', 'Bangladesz', '5654555371', '2019-07-21');
+
+-- 6 Produkt (20 poz)
+INSERT INTO Produkty (id_producenta, nazwa_produktu, opis_produktu, cena_netto_zakupu, cena_netto_sprzedazy, procent_vat_sprzedazy) VALUES
+(1, 'Sukienka', 'Sukienka krótka', 50, 100, 22),
+(1, 'Bluza', 'Czarna', 30, 200, 22),
+(2, 'Spodnie', 'Długie', 30, 120, 22),
+(2, 'Spodnie', 'Krótkie', 15, 89, 22),
+(1, 'Spodnie', 'Długie', 40, 159, 22),
+(3, 'Pasek', 'Błyszczący', 8, 109, 22),
+(1, 'Czapka', 'Z daszkiem', 12, 59, 22),
+(4, 'Torebka', 'Kopertówka', 22, 159, 22),
+(4, 'Apaszka', 'Jedwabna', 28, 119, 22),
+(3, 'Koszula', 'Długi rękaw', 30, 159, 22),
+(2, 'T-shirt', 'Szary', 5, 59, 22),
+(3, 'T-shirt', 'Z nadrukiem', 8, 79, 22),
+(1, 'T-shirt', 'Czarny', 5, 59, 22),
+(4, 'Sukienka', 'Biała', 15, 159, 22),
+(2, 'Dres', 'Sportowy', 45, 259, 22),
+(2, 'Skarpetki', 'Krótkie', 5, 59, 22),
+(1, 'Skarpetki', 'Długie', 6, 69, 22),
+(3, 'Spodnie', 'Jeansy', 16, 169, 22),
+(3, 'Spodnie', 'Chino', 12, 169, 22),
+(1, 'Spodenki', 'Krótkie', 4, 69, 22);
+
+-- 6 Zamówienie (10 pozycji)
+INSERT INTO Zamowienia (id_klienta, id_produktu, data_zamowienia) VALUES
+(2,12,'2022-01-12'),
+(3,14,'2022-02-12'),
+(3,15,'2021-12-10'),
+(1,8,'2021-11-08'),
+(6,2,'2021-10-09'),
+(1,9,'2022-02-10'),
+(5,17,'2021-09-28'),
+(4,18,'2021-11-11'),
+(4, 19, '2021-12-03'),
+(4,20,'2022-01-06');
+
+-- 6 Klient (10 pozycji)
+INSERT INTO Klienci ( imie, nazwisko, adres) VALUES
+('Adam', 'Kowalski', 'Warszawa'),
+('Jan', 'Kowalski', 'Warszawa'),
+('Anna', 'Ładna', 'Warszawa'),
+('Joanna', 'Marchewka', 'Warszawa'),
+('Joanna', 'Zielińska', 'Łódz'),
+('Marek', 'Laskowski', 'Wrocław'),
+('Mariusz', 'Grzebała', 'Wrocław'),
+('Konrad', 'Ziółkowski', 'Pszczyna'),
+('Karol', 'Graniczny', 'Siodło'),
+('Karolina', 'Podleśna', 'Bielsko Biała');
+
+-- 7 
+SELECT * FROM Produkty;
+SELECT * FROM Dostawcy;
+
+ALTER TABLE Produkty
+ADD CONSTRAINT ID_producenta_fk
+FOREIGN KEY(ID_producenta) 
+REFERENCES Dostawcy(Id);
+
+SELECT * FROM Zamowienia;
+SELECT * FROM Klienci;
+
+ALTER TABLE Zamowienia
+ADD CONSTRAINT Id_klienta_fk
+FOREIGN KEY(Id_klienta) 
+REFERENCES Klienci(Id);
+
+ALTER TABLE Zamowienia
+ADD CONSTRAINT id_produktu_fk
+FOREIGN KEY (Id_produktu)
+REFERENCES Produkty(Id);
+
+-- 8. Wyświetl wszystkie produkty z wszystkimi danymi od dostawcy, który znajduje się na pozycji 1 w tabeli „Dostawca”
+SELECT p.Nazwa_produktu, d.Nazwa_producenta, d.Adres_producenta, d.Nip_producenta, d.Data_umowy 
+FROM Produkty p, Dostawcy d
+WHERE d.id = 1;
+
+-- 9. Posortuj te produkty po Nazwie od A
+SELECT p.Nazwa_produktu, d.Nazwa_producenta, d.Adres_producenta, d.Nip_producenta, d.Data_umowy 
+FROM Produkty p, Dostawcy d
+WHERE d.id = 1
+ORDER BY p. Nazwa_produktu;
+
+
+-- 10. Wylicz średnią cenę za produktu od tego dostawcy
+SELECT ROUND(AVG(cena_netto_sprzedazy)) AS 'Średnia cena produktu dostawcy nr 1'
+FROM Produkty
+WHERE id_producenta = 1;
+
+-- 11. Wyświetl dwie grupy produktów tego dostawcy: Połowa najtańszych to grupa: „Tanie”
+-- Pozostałe to grupa: „Drogie” 
+
+SELECT AVG(middle_values) AS 'median' FROM (
+  SELECT cena_netto_sprzedazy AS 'middle_values' FROM
+    (
+      SELECT @row:=@row+1 as `row`, p.cena_netto_sprzedazy
+      FROM Produkty AS p, (SELECT @row:=0) AS r
+      WHERE id_producenta = 1 
+      ORDER BY p.cena_netto_sprzedazy
+    ) AS t1,
+    (
+      SELECT COUNT(*) as 'count'
+      FROM Produkty p
+      WHERE id_producenta = 1 
+    ) AS t2
+    WHERE t1.row >= t2.count/2 and t1.row <= ((t2.count/2) +1)) AS t3;
+
+SELECT nazwa_produktu, cena_netto_sprzedazy, (CASE 
+	WHEN cena_netto_sprzedazy <= 69 THEN 'Tanie'
+	WHEN cena_netto_sprzedazy > 69 THEN 'Drogie'
+	END) AS 'Kategoria'
+FROM Produkty 
+WHERE id_producenta = 1 
+ORDER BY cena_netto_sprzedazy;
+
+-- 12. Wyświetl produkty zamówione, wyświetlając nazwę
+SELECT z.id AS ID_zamowienia, z.data_zamowienia, p.nazwa_produktu
+FROM Zamowienia z
+JOIN Produkty p
+ON z.id_produktu = p.id
+ORDER BY z.id;
+
+-- lub:
+SELECT DISTINCT p.nazwa_produktu
+FROM Zamowienia z
+JOIN Produkty p
+ON z.id_produktu = p.id;
+
+-- 13. Wyświetl wszystkie produkty zamówione – ograniczając do wyświetlonych 5 pozycji
+SELECT * FROM Zamowienia
+LIMIT 5;
+
+-- 14. Policz wartość wszystkich zamówień
+SELECT ROUND(SUM(cena_brutto_sprzedazy),2) AS 'Wartość wszystkich zamówień'
+FROM Zamowienia z
+INNER JOIN produkty p
+ON p.id = z.id_produktu;
+
+-- 15. Wyświetl wszystkie zamówienia wraz z produktami sortując je wg daty od najstarszego do najnowszego
+SELECT z.data_zamowienia, p.nazwa_produktu
+FROM Zamowienia z
+INNER JOIN Produkty p
+ON p.id = z.id_produktu
+ORDER BY z.data_zamowienia;
+
+-- 16. Sprawdź czy w tabeli produkty masz uzupełnione wszystkie dane – wyświetl pozycje dla których brakuje danych
+SELECT * FROM Produkty
+WHERE 
+ID_producenta IS NULL OR
+Nazwa_produktu IS NULL OR
+Opis_produktu IS NULL OR
+Cena_netto_zakupu IS NULL OR
+Cena_brutto_zakupu IS NULL OR
+Cena_netto_sprzedazy IS NULL OR
+Cena_brutto_sprzedazy IS NULL OR
+Procent_VAT_sprzedazy IS NULL;
+
+-- 17. Wyświetl produkty najczęściej sprzedawane wraz z ich ceną
+SELECT p.nazwa_produktu, COUNT(p.nazwa_produktu), p.cena_brutto_sprzedazy
+FROM Zamowienia z
+LEFT Join Produkty p
+ON z.id_produktu = p.id
+GROUP BY (p.nazwa_produktu)
+ORDER BY COUNT(p.nazwa_produktu) DESC
+LIMIT 1;
+
+-- 18. Znajdź dzień w którym najwięcej zostało złożonych zamówień
+SELECT * FROM Zamowienia ORDER BY data_zamowienia DESC;
+
+UPDATE Zamowienia SET data_zamowienia = '2022-02-12' WHERE id = 6;
+
+SELECT COUNT(data_zamowienia), data_zamowienia
+FROM Zamowienia
+GROUP BY data_zamowienia
+ORDER BY data_zamowienia DESC
+LIMIT 1;
